@@ -5,6 +5,7 @@
     "pages/SearchPage",
     "pages/EventPage",
     "pages/SettingPage",
-    "pages/AddEventPage"
+    "pages/AddEventPage",
+    "pages/DeadlinePage"
   ]
 }

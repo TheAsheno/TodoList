@@ -2,16 +2,19 @@ import router from '@ohos.router'
 import EventTable from '../common/database/tables/EventTable';
 import EventData from '../viewmodel/EventData';
 import { tagDialog } from '../view/tagDialog'
-import { dateFormat }  from '../common/utils/DateUtil'
+import { dateFormat } from '../common/utils/DateUtil'
+import promptAction from '@ohos.promptAction'
+import emitter from '@ohos.events.emitter'
 
 @Entry
 @Component
 struct AddEventPage {
-  //private EventTable: EventTable = new EventTable();
-  //private TagTable: TagTable = new TagTable();
+  private EventTable: EventTable = new EventTable();
   @State isEdit: boolean = false;
   @Provide selectTag: string = '';
-  @State date: Date = new Date();
+  @State selectDate: string = dateFormat(new Date());
+  noteText: string = '';
+  titleText: string = '';
   @State isTimeChoose: boolean = false;
   tagDialogController: CustomDialogController = new CustomDialogController({
     builder: tagDialog(),
@@ -19,16 +22,69 @@ struct AddEventPage {
     autoCancel: false
   })
 
+  checkEvent(callback: (err: string, newEvent: EventData) => void) {
+    if (!this.titleText) {
+      callback('标题不能为空', null);
+      return;
+    }
+    if (!this.selectTag) {
+      callback('请选择标签', null);
+      return;
+    }
+    if (!this.isTimeChoose) {
+      callback('请输入截止时间', null);
+      return;
+    }
+    let tmp: EventData = {
+      id: 0,
+      name: this.titleText,
+      note: this.noteText,
+      createTime: '',
+      deadlineTime: this.selectDate,
+      updateTime: '',
+      tag: this.selectTag,
+      isDone: false
+    };
+    callback(null, tmp);
+  }
+
+  insertEvent(newEvent: EventData) {
+    this.EventTable.insertData(newEvent, (id: number) => {
+      newEvent.id = id;
+    });
+  }
+
+  aboutToAppear() {
+    this.EventTable.getRdbStore(() => {});
+  }
+
   build() {
     Column() {
       Column({ space: 15 }) {
         Row({ space: 20 }) {
-          Image($r('app.media.ic_sort'))
-            .width(30)
-            .height(30)
-          Image($r("app.media.ic_mg"))
-            .width(30)
-            .height(30)
+          Image($r('app.media.ic_leftArrow'))
+            .width($r('app.float.icon_size_L'))
+            .height($r('app.float.icon_size_L'))
+            .onClick(() => router.back())
+          Image($r("app.media.ic_yes"))
+            .width($r('app.float.icon_size_L'))
+            .height($r('app.float.icon_size_L'))
+            .onClick(() => {
+              this.checkEvent((err, newEvent) => {
+                if (err) {
+                  promptAction.showToast({
+                    message: err,
+                    duration: 2000,
+                    bottom: 50
+                  });
+                }
+                else {
+                  this.insertEvent(newEvent);
+                  emitter.emit({ eventId: 1 })
+                  router.back();
+                }
+              })
+            })
         }.width('100%')
         .justifyContent(FlexAlign.End)
 
@@ -42,6 +98,7 @@ struct AddEventPage {
           .strokeWidth(2)
           .lineCap(LineCapStyle.Square)
           .margin({ left: 10, right: 10, bottom: 10 })
+
         List({ space: 30 }) {
           ListItem() {
             inputItem({ icon: $r('app.media.ic_title') }) {
@@ -49,6 +106,9 @@ struct AddEventPage {
                 .height(40)
                 .layoutWeight(1)
                 .caretColor(Color.Black)
+                .onChange((value) => {
+                  this.titleText = value;
+                })
             }
           }
 
@@ -63,14 +123,14 @@ struct AddEventPage {
 
           ListItem() {
             inputItem({ icon: $r('app.media.ic_time') }) {
-              Button(this.isTimeChoose ? dateFormat(this.date) : "截止时间")
+              Button(this.isTimeChoose ? this.selectDate : "截止时间")
                 .btStyle(() => {
                   DatePickerDialog.show({
                     start: new Date(),
                     end: new Date("2100-12-31"),
-                    selected: this.date,
+                    selected: new Date(this.selectDate),
                     onAccept: (value: DatePickerResult) => {
-                      this.date.setFullYear(value.year, value.month, value.day)
+                      this.selectDate = value.year + '-' + (value.month + 1) + '-' + value.day;
                       this.isTimeChoose = true;
                     }
                   })
@@ -81,19 +141,22 @@ struct AddEventPage {
           ListItem() {
             inputItem({ icon: $r('app.media.ic_note') }) {
               TextArea()
-                .width(250)
+                .width(280)
                 .height(300)
                 .padding(20)
+                .fontSize($r('app.float.font_size_MP'))
                 .backgroundColor(Color.Transparent)
                 .borderColor(Color.Black)
                 .borderWidth(1)
                 .caretColor(Color.Black)
+                .onChange((value) => {
+                  this.noteText = value;
+                })
             }
           }
         }.width('90%')
       }.width('90%')
       .justifyContent(FlexAlign.Start)
-
       .height('90%')
     }.pageBgStyle()
   }
@@ -105,10 +168,10 @@ struct inputItem {
   @BuilderParam content: () => void;
 
   build() {
-    Row({ space: 10 }) {
+    Row({ space: 15 }) {
       Image(this.icon)
-        .height(25)
-        .width(25)
+        .height($r('app.float.icon_size_M'))
+        .width($r('app.float.icon_size_M'))
       this.content()
     }
 
@@ -129,12 +192,12 @@ struct inputItem {
 @Extend(Text) function titleStyle() {
   .alignSelf(ItemAlign.Start)
   .fontWeight(FontWeight.Bold)
-  .fontSize(30)
+  .fontSize($r('app.float.font_size_XXL'))
   .margin({ left: 20 })
 }
 
 @Extend(Button) function btStyle(callback: () => void) {
-  .fontSize(15)
+  .fontSize($r('app.float.font_size_M'))
   .fontColor(Color.Grey)
   .backgroundColor('#DFDFDE')
   .onClick(callback)

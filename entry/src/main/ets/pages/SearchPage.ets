@@ -29,8 +29,8 @@ struct SearchPage {
       Row() {
         Row({ space: 10 }) {
           Image($r('app.media.ic_leftArrow'))
-            .width(25)
-            .height(25)
+            .width($r('app.float.icon_size_M'))
+            .height($r('app.float.icon_size_M'))
             .onClick(() => router.back())
           Search({ placeholder: 'search' })
             .width('90%')
@@ -44,7 +44,7 @@ struct SearchPage {
       if (this.searchText) {
         Row() {
           Text('搜索到 ' + this.searchList.length + ' 条结果')
-            .fontSize(15)
+            .fontSize($r('app.float.font_size_M'))
             .fontColor(Color.Grey)
         }.width('90%')
         .justifyContent(FlexAlign.Start)
@@ -52,10 +52,10 @@ struct SearchPage {
       if (this.searchList.length == 0) {
         Column({ space: 20 }) {
           Image($r('app.media.ic_noData'))
-            .width(100)
-            .height(100)
+            .width($r('app.float.icon_size_XXL'))
+            .height($r('app.float.icon_size_XXL'))
           Text('没有匹配的结果')
-            .fontSize(20)
+            .fontSize($r('app.float.font_size_MP'))
             .fontColor(Color.Grey)
         }.height('100%')
         .offset({ x: 0, y: -100 })
@@ -88,12 +88,12 @@ struct SearchPage {
   @Builder searchItem(item: EventData) {
     Column() {
       Row({ space: 10 }) {
-        Text(item.name).fontSize(20)
+        Text(item.name).fontSize($r('app.float.font_size_MP'))
         Blank()
-        Text(item.deadlineTime).fontSize(15)
+        Text(item.deadlineTime).fontSize($r('app.float.font_size_M'))
         Text(item.tag)
           .padding(2)
-          .fontSize(12)
+          .fontSize($r('app.float.font_size_S'))
           .backgroundColor('#DDDDDD')
       }.height(30)
       .width('100%')
@@ -109,7 +109,7 @@ struct SearchPage {
 }
 
 @Extend(Text) function noteStyle() {
-  .fontSize(12)
+  .fontSize($r('app.float.font_size_S'))
   .fontColor(Color.Grey)
   .maxLines(1)
   .textOverflow({ overflow: TextOverflow.Ellipsis })

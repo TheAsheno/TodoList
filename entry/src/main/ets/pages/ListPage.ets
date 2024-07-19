@@ -4,6 +4,7 @@ import { dateFormat }  from '../common/utils/DateUtil'
 import EventTable from '../common/database/tables/EventTable';
 import EventData from '../viewmodel/EventData';
 import { tagDialog } from '../view/tagDialog'
+import emitter from '@ohos.events.emitter'
 
 @Entry
 @Component
@@ -38,6 +39,9 @@ export struct ListPage {
   aboutToAppear() {
     this.EventTable.getRdbStore(() => {
       this.initOrRefresh()
+    });
+    emitter.on({ eventId: 1 }, () => {
+      this.initOrRefresh();
     })
   }
 
@@ -67,14 +71,6 @@ export struct ListPage {
         this.doneListData = result;
       }, { isDone: true, orderByUpdateTimeDesc: true, tag: this.selectTag, timeGreaterThanOrEqualTo: dateFormat(threeDaysAgo) });
     }
-  }
-
-  insertEvent(newEvent: EventData) {
-    this.EventTable.insertData(newEvent, (id: number) => {
-      newEvent.id = id;
-      if (!this.selectTag || this.selectTag == newEvent.tag)
-        this.todoListData.unshift(newEvent);
-    });
   }
 
   updateEvent(newEvent: EventData) {
@@ -120,20 +116,20 @@ export struct ListPage {
           Row({ space: 20 }) {
             if (this.isEdit)
               Image($r('app.media.ic_delete'))
-                .height(25)
-                .width(25)
+                .height($r('app.float.icon_size_M'))
+                .width($r('app.float.icon_size_M'))
                 .onClick(() => this.deleteEvent())
             else
               Image($r('app.media.ic_sort'))
-                .width(30)
-                .height(30)
+                .width($r('app.float.icon_size_L'))
+                .height($r('app.float.icon_size_L'))
                 .onClick(() => {
                   if (!this.isEdit)
                     this.tagDialogController.open()
                 })
             Image($r("app.media.ic_mg"))
-              .width(30)
-              .height(30)
+              .width($r('app.float.icon_size_L'))
+              .height($r('app.float.icon_size_L'))
               .onClick(() => {
                 this.deleteList = [];
                 this.isEdit = !this.isEdit;
@@ -153,7 +149,10 @@ export struct ListPage {
           TextInput({ placeholder: 'search' })
             .height(40)
             .focusable(false)
-            .onClick(() => router.pushUrl({ url: 'pages/SearchPage' }))
+            .onClick(() => {
+              this.isEdit = false;
+              router.pushUrl({ url: 'pages/SearchPage' })
+            })
 
           List({ space: 20 }) {
             ListItem() {
@@ -200,15 +199,12 @@ export struct ListPage {
         .margin({ top: 20, bottom: 20 })
         if (!this.isEdit)
           Image($r('app.media.ic_addEvent'))
-            .height(60)
-            .width(60)
+            .height($r('app.float.icon_size_XL'))
+            .width($r('app.float.icon_size_XL'))
             .offset({ x: -10, y: -30 })
             .fillColor($r('app.color.addEventButtonColor'))
             .opacity(0.8)
             .onClick(() => {
-              if (!this.isEdit) {}
-                //let tmp: EventData = new EventData(this.newEvent);
-                //this.insertEvent(tmp);
                 router.pushUrl({ url: 'pages/AddEventPage' })
             })
       }
@@ -217,14 +213,14 @@ export struct ListPage {
   @Builder selectTagItem() {
     Row({ space: 5 }) {
       Image($r('app.media.ic_tags'))
-        .height(20)
-        .width(20)
+        .height($r('app.float.icon_size_S'))
+        .width($r('app.float.icon_size_S'))
       Text(this.selectTag)
-        .fontSize(12)
+        .fontSize($r('app.float.font_size_S'))
         .fontColor(Color.Grey)
       Image($r('app.media.ic_close2'))
-        .height(20)
-        .width(20)
+        .height($r('app.float.icon_size_S'))
+        .width($r('app.float.icon_size_S'))
         .onClick(() => {
           this.selectTag = '';
         })
@@ -244,7 +240,7 @@ export struct ListPage {
       Text(listTitle).typeStyle()
       if (promptText)
         Text(promptText)
-          .fontSize(12)
+          .fontSize($r('app.float.font_size_S'))
           .fontColor(Color.Grey)
       Blank()
     }.width('100%')
@@ -279,22 +275,22 @@ struct EventItem {
         }
         else {
           Image(this.event.isDone ? $r('app.media.ic_done') : $r('app.media.ic_todo'))
-            .height(18)
-            .width(18)
+            .height($r('app.float.icon_size_S'))
+            .width($r('app.float.icon_size_S'))
             .onClick(() => {
               this.event.isDone = !this.event.isDone;
               this.updateList();
             })
         }
         Text(this.event.name)
-          .fontSize(15)
+          .fontSize($r('app.float.font_size_M'))
           .opacity(this.event.isDone ? 0.4 : 1)
           .decoration({ type: this.event.isDone ? TextDecorationType.LineThrough : TextDecorationType.None })
         Blank()
-        Text(this.event.deadlineTime).fontSize(12)
+        Text(this.event.deadlineTime).fontSize($r('app.float.font_size_S'))
         Text(this.event.tag)
           .padding(2)
-          .fontSize(12)
+          .fontSize($r('app.float.font_size_S'))
           .backgroundColor('#DDDDDD')
         if (!this.event.isDone) {
           Circle()
@@ -324,12 +320,12 @@ struct EventItem {
 @Extend(Text) function titleStyle() {
   .alignSelf(ItemAlign.Start)
   .fontWeight(FontWeight.Bold)
-  .fontSize(30)
+  .fontSize($r('app.float.font_size_XXL'))
   .margin({ left: 20 })
 }
 
 @Extend(Text) function typeStyle() {
-  .fontSize(18)
+  .fontSize($r('app.float.font_size_MP'))
   .alignSelf(ItemAlign.Start)
 }
 

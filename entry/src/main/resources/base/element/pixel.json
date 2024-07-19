@@ -17,6 +17,34 @@
       "value": "24vp"
     },
     {
+      "name": "font_size_XL",
+      "value": "28vp"
+    },
+    {
+      "name": "font_size_XXL",
+      "value": "32vp"
+    },
+    {
+      "name": "icon_size_S",
+      "value": "20vp"
+    },
+    {
+      "name": "icon_size_M",
+      "value": "25vp"
+    },
+    {
+      "name": "icon_size_L",
+      "value": "30vp"
+    },
+    {
+      "name": "icon_size_XL",
+      "value": "60vp"
+    },
+    {
+      "name": "icon_size_XXL",
+      "value": "100vp"
+    },
+    {
       "name": "image_size",
       "value": "40vp"
     },

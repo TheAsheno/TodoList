@@ -1,5 +1,6 @@
 import { ListPage } from './ListPage'
-//import { temp } from './temp'
+import { DeadlinePage } from './DeadlinePage'
+import { SettingPage } from './SettingPage'
 
 AppStorage.SetOrCreate('currentTabIndex', 0);
 AppStorage.SetOrCreate('currentEventId', -1);
@@ -14,10 +15,10 @@ struct Index {
         ListPage()
       }.tabBar(this.barBuilder(0, '清单', $r('app.media.list')))
       TabContent() {
-        //temp()
+        DeadlinePage()
       }.tabBar(this.barBuilder(1, '截止', $r('app.media.time')))
       TabContent() {
-
+        SettingPage()
       }.tabBar(this.barBuilder(2, '设置', $r('app.media.set')))
     }
     .barPosition(BarPosition.End)

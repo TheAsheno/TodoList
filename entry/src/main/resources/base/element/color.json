@@ -23,6 +23,22 @@
     {
       "name": "listBackground",
       "value": "#F5F5F5"
+    },
+    {
+      "name": "deadlineLv1Color",
+      "value": "#FF0000"
+    },
+    {
+      "name": "deadlineLv2Color",
+      "value": "#FFB200"
+    },
+    {
+      "name": "deadlineLv3Color",
+      "value": "#FFDE4D"
+    },
+    {
+      "name": "deadlineLv4Color",
+      "value": "#97BE5A"
     }
   ]
 }

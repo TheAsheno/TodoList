@@ -5,11 +5,11 @@ export function getCircleColor(deadlineTime: string) {
   if (daysDiff < 0)
     return Color.Grey;
   else if (daysDiff < 1)
-    return Color.Red;
+    return $r('app.color.deadlineLv1Color');
   else if (daysDiff < 3)
-    return Color.Orange;
+    return $r('app.color.deadlineLv2Color');
   else if (daysDiff < 7)
-    return Color.Yellow;
+    return $r('app.color.deadlineLv3Color');
   else
-    return Color.Green;
+    return $r('app.color.deadlineLv4Color');
 }
