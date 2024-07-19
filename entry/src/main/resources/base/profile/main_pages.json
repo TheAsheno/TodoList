@@ -1,0 +1,10 @@
+{
+  "src": [
+    "pages/Index",
+    "pages/ListPage",
+    "pages/SearchPage",
+    "pages/EventPage",
+    "pages/SettingPage",
+    "pages/AddEventPage"
+  ]
+}

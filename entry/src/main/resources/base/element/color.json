@@ -1,0 +1,28 @@
+{
+  "color": [
+    {
+      "name": "start_window_background",
+      "value": "#FFFFFF"
+    },
+    {
+      "name": "tabFocusColor",
+      "value": "#959595"
+    },
+    {
+      "name": "dividerColor",
+      "value": "#EEEDEB"
+    },
+    {
+      "name": "addEventButtonColor",
+      "value": "#3572EF"
+    },
+    {
+      "name": "closeTagButtonColor",
+      "value": "#0F67B1"
+    },
+    {
+      "name": "listBackground",
+      "value": "#F5F5F5"
+    }
+  ]
+}
