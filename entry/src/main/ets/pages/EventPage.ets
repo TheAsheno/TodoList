@@ -61,11 +61,16 @@ struct EventPage {
   insertEvent(newEvent: EventData) {
     this.EventTable.insertData(newEvent, (id: number) => {
       newEvent.id = id;
+      emitter.emit({ eventId: 1 })
+      router.back();
     });
   }
 
   updateEvent(newEvent: EventData) {
-    this.EventTable.updateData(newEvent, () => {});
+    this.EventTable.updateData(newEvent, () => {
+      emitter.emit({ eventId: 1 })
+      router.back();
+    });
   }
 
   aboutToAppear() {
@@ -103,9 +108,10 @@ struct EventPage {
                       value: '确认',
                       fontColor: Color.Red,
                       action: () => {
-                        this.EventTable.deleteData(this.event.id, () => {});
-                        emitter.emit({ eventId: 1 })
-                        router.back();
+                        this.EventTable.deleteData(this.event.id, () => {
+                          emitter.emit({ eventId: 1 })
+                          router.back();
+                        });
                       }
                     },
                     secondaryButton: {
@@ -136,8 +142,6 @@ struct EventPage {
                     this.insertEvent(newEvent);
                   else if (this.action == EventAction.Update)
                     this.updateEvent(newEvent);
-                  emitter.emit({ eventId: 1 })
-                  router.back();
                 }
               })
             })
@@ -253,7 +257,6 @@ struct inputItem {
   .width('100%')
   .height('100%')
   .alignItems(HorizontalAlign.Center)
-  .justifyContent(FlexAlign.Start)
   .backgroundImage($r('app.media.img_add_bg7'))
   .backgroundImageSize({ width: '100%', height: '100%' })
   .justifyContent(FlexAlign.SpaceEvenly)

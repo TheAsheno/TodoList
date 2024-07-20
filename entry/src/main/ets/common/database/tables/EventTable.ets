@@ -39,10 +39,12 @@ export default class EventTable {
     isDone?: boolean,
     tag?: string,
     orderByCreateTimeDesc?: boolean,
-    orderByDeadlineTimeDesc?: boolean,
+    orderByDeadlineTimeAsc?: boolean,
     orderByUpdateTimeDesc?: boolean,
     limit?: number,
-    timeGreaterThanOrEqualTo?: string
+    updateTimeGreaterThanOrEqualTo?: string,
+    deadlineTimeExpire?: boolean,
+    deadlineTimeBetween?: { begin: string, end: string }
   }) {
     let predicates = new relationalStore.RdbPredicates(CommonConstants.EVENT_TABLE.tableName);
     if (options) {
@@ -54,14 +56,20 @@ export default class EventTable {
         predicates.equalTo('tag', options.tag);
       if (options.orderByCreateTimeDesc !== undefined)
         predicates.orderByDesc('createTime');
-      if (options.orderByDeadlineTimeDesc !== undefined)
-        predicates.orderByDesc('deadlineTime');
+      if (options.orderByDeadlineTimeAsc !== undefined)
+        predicates.orderByAsc('deadlineTime');
       if (options.orderByUpdateTimeDesc !== undefined)
         predicates.orderByDesc('updateTime');
       if (options.limit)
         predicates.limitAs(options.limit);
-      if (options.timeGreaterThanOrEqualTo)
-        predicates.greaterThanOrEqualTo('updateTime', options.timeGreaterThanOrEqualTo)
+      if (options.updateTimeGreaterThanOrEqualTo)
+        predicates.greaterThanOrEqualTo('updateTime', options.updateTimeGreaterThanOrEqualTo);
+      if (options.deadlineTimeExpire) {
+        predicates.lessThanOrEqualTo('deadlineTime', dayjs().format("YYYY-MM-DD HH:mm"));
+      }
+      if (options.deadlineTimeBetween) {
+        predicates.between('deadlineTIme', options.deadlineTimeBetween.begin, options.deadlineTimeBetween.end);
+      }
     }
     this.eventTable.queryData(predicates, (resultSet: relationalStore.ResultSet) => {
       let count: number = resultSet.rowCount;

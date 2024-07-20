@@ -131,7 +131,7 @@ export struct temp {
       Text('开发')
         .fontSize(12)
         .fontColor(Color.Grey)
-      Image($r('app.media.ic_close2'))
+      Image($r("app.media.ic_close"))
         .height(20)
         .width(20)
     }.padding(5)

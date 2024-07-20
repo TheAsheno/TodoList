@@ -3,7 +3,6 @@ import { DeadlinePage } from './DeadlinePage'
 import { SettingPage } from './SettingPage'
 
 AppStorage.SetOrCreate('currentTabIndex', 0);
-AppStorage.SetOrCreate('currentEventId', -1);
 
 @Entry
 @Component

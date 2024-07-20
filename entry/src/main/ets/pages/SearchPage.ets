@@ -6,7 +6,6 @@ import { EventAction } from '../enums/EventAction'
 @Entry
 @Component
 struct SearchPage {
-  @StorageLink('currentEventId') currentEventId: number = -1;
   private EventTable: EventTable = new EventTable();
   @State searchText: string = "";
   @State searchList: EventData[] = []
@@ -100,7 +99,6 @@ struct SearchPage {
       .width('100%')
       .justifyContent(FlexAlign.Start)
       .onClick(() => {
-        this.currentEventId = item.id;
         router.pushUrl({ url: 'pages/EventPage', params: { event: item, action: EventAction.Update } })
       })
 

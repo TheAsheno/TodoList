@@ -13,8 +13,7 @@ export struct ListPage {
   private EventTable: EventTable = new EventTable();
   @Provide @Watch('onSelectTagChange') selectTag: string = '';
   @State events: Array<EventData> = [];
-  @State index: number = -1;
-  @State pageIndex: number = 1;
+  @State pageIndex: number = 0;
   @State isInsert: boolean = false;
   @State isEdit: boolean = false;
   @StorageLink('currentTabIndex') @Watch('onPageChange') currentTabIndex: number = 0
@@ -69,12 +68,13 @@ export struct ListPage {
     if (doneFlag) {
       this.EventTable.queryData((result: EventData[]) => {
         this.doneListData = result;
-      }, { isDone: true, orderByUpdateTimeDesc: true, tag: this.selectTag, timeGreaterThanOrEqualTo: threeDaysAgo });
+      }, { isDone: true, orderByUpdateTimeDesc: true, tag: this.selectTag, updateTimeGreaterThanOrEqualTo: threeDaysAgo });
     }
   }
 
   updateEvent(newEvent: EventData) {
     this.EventTable.updateData(newEvent, () => {
+      emitter.emit({ eventId: 2 });
     });
   }
 
@@ -85,23 +85,9 @@ export struct ListPage {
       this.todoListData = this.todoListData.filter(event => !this.deleteList.includes(event.id));
       this.doneListData = this.doneListData.filter(event => !this.deleteList.includes(event.id))
       this.deleteList = [];
+      emitter.emit({ eventId: 2 });
     }
     this.isEdit = false;
-  }
-
-  selectEvent(item: EventData) {
-    this.isInsert = false;
-    this.index = this.events.indexOf(item);
-    this.newEvent = {
-      id: item.id,
-      name: item.name,
-      note: item.note,
-      createTime: item.createTime,
-      deadlineTime: item.deadlineTime,
-      updateTime: item.updateTime,
-      tag: item.tag,
-      isDone: item.isDone
-    };
   }
 
   build() {
@@ -234,7 +220,7 @@ export struct ListPage {
       Text(this.selectTag)
         .fontSize($r('app.float.font_size_S'))
         .fontColor(Color.Grey)
-      Image($r('app.media.ic_close2'))
+      Image($r("app.media.ic_close"))
         .height($r('app.float.icon_size_S'))
         .width($r('app.float.icon_size_S'))
         .onClick(() => {
@@ -268,7 +254,6 @@ struct EventItem {
   @ObjectLink event: EventData;
   updateList: () => void;
   @Link deleteList: number[];
-  @StorageLink('currentEventId') currentEventId: number = -1;
   @Prop isEdit: boolean;
 
   build() {
@@ -316,7 +301,6 @@ struct EventItem {
       .width('100%')
       .justifyContent(FlexAlign.Start)
       .onClick(() => {
-        this.currentEventId = this.event.id;
         router.pushUrl({ url: 'pages/EventPage', params: { event: this.event, action: EventAction.Update } })
       })
     }.padding(10)
@@ -327,7 +311,6 @@ struct EventItem {
   .width('100%')
   .height('100%')
   .alignItems(HorizontalAlign.Center)
-  .justifyContent(FlexAlign.Start)
   .backgroundImage($r('app.media.img_list_bg'))
   .backgroundImageSize({ width: '100%', height: '100%' })
   .justifyContent(FlexAlign.SpaceEvenly)
