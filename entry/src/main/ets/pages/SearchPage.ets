@@ -1,6 +1,7 @@
 import router from '@ohos.router'
 import EventTable from '../common/database/tables/EventTable';
 import EventData from '../viewmodel/EventData';
+import { EventAction } from '../enums/EventAction'
 
 @Entry
 @Component
@@ -100,7 +101,7 @@ struct SearchPage {
       .justifyContent(FlexAlign.Start)
       .onClick(() => {
         this.currentEventId = item.id;
-        router.pushUrl({ url: 'pages/EventPage', params: { event: item } })
+        router.pushUrl({ url: 'pages/EventPage', params: { event: item, action: EventAction.Update } })
       })
 
       Text(item.note).noteStyle()

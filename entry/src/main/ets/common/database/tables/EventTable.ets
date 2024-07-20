@@ -103,9 +103,9 @@ function generateBucket(event: EventData, isInsert: boolean): relationalStore.Va
   let obj: relationalStore.ValuesBucket = {};
   obj.name = event.name;
   obj.note = event.note;
-  obj.createTime = isInsert ? dayjs().format("YYYY-MM-DD") : event.createTime;
+  obj.createTime = isInsert ? dayjs().format("YYYY-MM-DD HH:mm") : event.createTime;
   obj.deadlineTime = event.deadlineTime;
-  obj.updateTime = dayjs().format("YYYY-MM-DD");
+  obj.updateTime = dayjs().format("YYYY-MM-DD HH:mm");
   obj.tag = event.tag;
   obj.isDone = isInsert ? false : event.isDone;
   return obj;

@@ -10,7 +10,3 @@ export function getDateDiff(targetTime: string) {
     seconds: Math.floor((timeDiff % (1000 * 60)) / 1000)
   }
 }
-
-export function dateFormat(date: Date) {
-  return date.getFullYear() + '-' + date.getMonth() + '-' + date.getDate()
-}

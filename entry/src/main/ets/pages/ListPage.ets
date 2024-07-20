@@ -1,10 +1,11 @@
 import router from '@ohos.router'
 import { getCircleColor } from '../common/utils/ColorUtil'
-import { dateFormat }  from '../common/utils/DateUtil'
 import EventTable from '../common/database/tables/EventTable';
 import EventData from '../viewmodel/EventData';
 import { tagDialog } from '../view/tagDialog'
 import emitter from '@ohos.events.emitter'
+import dayjs from "dayjs";
+import { EventAction } from '../enums/EventAction'
 
 @Entry
 @Component
@@ -58,8 +59,7 @@ export struct ListPage {
     this.isEdit = false;
     this.deleteList = [];
 
-    let threeDaysAgo = new Date();
-    threeDaysAgo.setDate(new Date().getDate() - 3);
+    let threeDaysAgo = dayjs().subtract(3, 'day').format("YYYY-MM-DD HH:mm");
 
     if (todoFlag) {
       this.EventTable.queryData((result: EventData[]) => {
@@ -69,18 +69,13 @@ export struct ListPage {
     if (doneFlag) {
       this.EventTable.queryData((result: EventData[]) => {
         this.doneListData = result;
-      }, { isDone: true, orderByUpdateTimeDesc: true, tag: this.selectTag, timeGreaterThanOrEqualTo: dateFormat(threeDaysAgo) });
+      }, { isDone: true, orderByUpdateTimeDesc: true, tag: this.selectTag, timeGreaterThanOrEqualTo: threeDaysAgo });
     }
   }
 
   updateEvent(newEvent: EventData) {
     this.EventTable.updateData(newEvent, () => {
     });
-    let list = this.events;
-    this.events = [];
-    list[this.index] = newEvent;
-    this.events = list;
-    this.index = -1;
   }
 
   deleteEvent() {
@@ -113,12 +108,33 @@ export struct ListPage {
     Column() {
       Stack({ alignContent: Alignment.BottomEnd }) {
         Column({ space: 15 }) {
-          Row({ space: 20 }) {
+          Row({ space: 30 }) {
             if (this.isEdit)
               Image($r('app.media.ic_delete'))
                 .height($r('app.float.icon_size_M'))
                 .width($r('app.float.icon_size_M'))
-                .onClick(() => this.deleteEvent())
+                .onClick(() => {
+                  AlertDialog.show(
+                    {
+                      title: '删除该事项？',
+                      message: '删除后无法恢复，您确认要删除吗？',
+                      autoCancel: true,
+                      alignment: DialogAlignment.Bottom,
+                      offset: { dx: 0, dy: -20 },
+                      primaryButton: {
+                        value: '确认',
+                        fontColor: Color.Red,
+                        action: () => {
+                          this.deleteEvent();
+                        }
+                      },
+                      secondaryButton: {
+                        value: '取消',
+                        action: () => {}
+                      }
+                    }
+                  )
+                })
             else
               Image($r('app.media.ic_sort'))
                 .width($r('app.float.icon_size_L'))
@@ -205,7 +221,7 @@ export struct ListPage {
             .fillColor($r('app.color.addEventButtonColor'))
             .opacity(0.8)
             .onClick(() => {
-                router.pushUrl({ url: 'pages/AddEventPage' })
+                router.pushUrl({ url: 'pages/EventPage', params: { action: EventAction.Insert } })
             })
       }
     }.pageBgStyle()
@@ -287,7 +303,7 @@ struct EventItem {
           .opacity(this.event.isDone ? 0.4 : 1)
           .decoration({ type: this.event.isDone ? TextDecorationType.LineThrough : TextDecorationType.None })
         Blank()
-        Text(this.event.deadlineTime).fontSize($r('app.float.font_size_S'))
+        Text(dayjs(this.event.deadlineTime).format("YYYY-MM-DD")).fontSize($r('app.float.font_size_S'))
         Text(this.event.tag)
           .padding(2)
           .fontSize($r('app.float.font_size_S'))
@@ -300,8 +316,8 @@ struct EventItem {
       .width('100%')
       .justifyContent(FlexAlign.Start)
       .onClick(() => {
-        //this.currentEventId = this.event.id;
-        router.pushUrl({ url: 'pages/EventPage', params: { event: this.event } })
+        this.currentEventId = this.event.id;
+        router.pushUrl({ url: 'pages/EventPage', params: { event: this.event, action: EventAction.Update } })
       })
     }.padding(10)
   }

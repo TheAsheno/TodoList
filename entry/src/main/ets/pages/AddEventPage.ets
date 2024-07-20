@@ -2,19 +2,21 @@ import router from '@ohos.router'
 import EventTable from '../common/database/tables/EventTable';
 import EventData from '../viewmodel/EventData';
 import { tagDialog } from '../view/tagDialog'
-import { dateFormat } from '../common/utils/DateUtil'
 import promptAction from '@ohos.promptAction'
 import emitter from '@ohos.events.emitter'
+import dayjs from "dayjs";
 
 @Entry
 @Component
 struct AddEventPage {
   private EventTable: EventTable = new EventTable();
-  @State isEdit: boolean = false;
   @Provide selectTag: string = '';
-  @State selectDate: string = dateFormat(new Date());
+  @State selectTime: string = '';
+  @State selectDate: string = '';
+  selectDeadline: Date = new Date();
   noteText: string = '';
   titleText: string = '';
+  @State isDateChoose: boolean = false;
   @State isTimeChoose: boolean = false;
   tagDialogController: CustomDialogController = new CustomDialogController({
     builder: tagDialog(),
@@ -31,7 +33,7 @@ struct AddEventPage {
       callback('请选择标签', null);
       return;
     }
-    if (!this.isTimeChoose) {
+    if (!this.isDateChoose) {
       callback('请输入截止时间', null);
       return;
     }
@@ -40,7 +42,7 @@ struct AddEventPage {
       name: this.titleText,
       note: this.noteText,
       createTime: '',
-      deadlineTime: this.selectDate,
+      deadlineTime: this.selectDate + ' ' + this.selectTime,
       updateTime: '',
       tag: this.selectTag,
       isDone: false
@@ -55,7 +57,9 @@ struct AddEventPage {
   }
 
   aboutToAppear() {
-    this.EventTable.getRdbStore(() => {});
+    this.selectDeadline.setHours(0, 0);
+    this.EventTable.getRdbStore(() => {
+    });
   }
 
   build() {
@@ -123,24 +127,40 @@ struct AddEventPage {
 
           ListItem() {
             inputItem({ icon: $r('app.media.ic_time') }) {
-              Button(this.isTimeChoose ? this.selectDate : "截止时间")
-                .btStyle(() => {
-                  DatePickerDialog.show({
-                    start: new Date(),
-                    end: new Date("2100-12-31"),
-                    selected: new Date(this.selectDate),
-                    onAccept: (value: DatePickerResult) => {
-                      this.selectDate = value.year + '-' + (value.month + 1) + '-' + value.day;
-                      this.isTimeChoose = true;
-                    }
+              Row({ space: 10 }) {
+                Button(this.isDateChoose ? this.selectDate : "截止时间")
+                  .btStyle(() => {
+                    DatePickerDialog.show({
+                      start: new Date(),
+                      end: new Date("2100-12-31"),
+                      selected: this.selectDeadline,
+                      onAccept: (value: DatePickerResult) => {
+                        this.selectDeadline.setFullYear(value.year, value.month, value.day)
+                        this.selectDate = dayjs(this.selectDeadline).format("YYYY-MM-DD");
+                        this.isDateChoose = true;
+                      }
+                    })
                   })
-                })
+                if (this.isDateChoose)
+                  Button((this.isTimeChoose ? this.selectTime : "0:0"))
+                    .btStyle(() => {
+                      TimePickerDialog.show({
+                        selected: this.selectDeadline,
+                        useMilitaryTime: true,
+                        onAccept: (value: TimePickerResult) => {
+                          this.selectDeadline.setHours(value.hour, value.minute);
+                          this.selectTime = dayjs(this.selectDeadline).format("HH:mm");
+                          this.isTimeChoose = true;
+                        }
+                      })
+                    })
+              }
             }
           }
 
           ListItem() {
             inputItem({ icon: $r('app.media.ic_note') }) {
-              TextArea()
+              TextArea({ placeholder: '笔记' })
                 .width(280)
                 .height(300)
                 .padding(20)
