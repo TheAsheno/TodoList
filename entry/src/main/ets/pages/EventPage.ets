@@ -257,7 +257,7 @@ struct inputItem {
   .width('100%')
   .height('100%')
   .alignItems(HorizontalAlign.Center)
-  .backgroundImage($r('app.media.img_add_bg7'))
+  .backgroundImage($r("app.media.img_add_bg"))
   .backgroundImageSize({ width: '100%', height: '100%' })
   .justifyContent(FlexAlign.SpaceEvenly)
 }

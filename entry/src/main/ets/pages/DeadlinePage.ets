@@ -5,7 +5,7 @@ import EventData from '../viewmodel/EventData';
 import { EventAction } from '../enums/EventAction'
 import emitter from '@ohos.events.emitter'
 import dayjs from "dayjs";
-import { UrgencyValue } from '../enums/UrgencyValue'
+import { UrgencyDays, UrgencyText } from '../enums/UrgencyValue'
 
 @Entry
 @Component
@@ -16,10 +16,10 @@ export struct DeadlinePage {
   @State lv3ListData: Array<EventData> = [];
   @State lv4ListData: Array<EventData> = [];
   @State expireListData: Array<EventData> = [];
-  lv1DaysLater = dayjs().add(UrgencyValue.Lv1, 'day').format("YYYY-MM-DD HH:mm");
-  lv2DaysLater = dayjs().add(UrgencyValue.Lv2, 'day').format("YYYY-MM-DD HH:mm");
-  lv3DaysLater = dayjs().add(UrgencyValue.Lv3, 'day').format("YYYY-MM-DD HH:mm");
-  lv4DaysLater = dayjs().add(UrgencyValue.Lv4, 'day').format("YYYY-MM-DD HH:mm");
+  lv1DaysLater = dayjs().add(UrgencyDays.Lv1, 'day').format("YYYY-MM-DD HH:mm");
+  lv2DaysLater = dayjs().add(UrgencyDays.Lv2, 'day').format("YYYY-MM-DD HH:mm");
+  lv3DaysLater = dayjs().add(UrgencyDays.Lv3, 'day').format("YYYY-MM-DD HH:mm");
+  lv4DaysLater = dayjs().add(UrgencyDays.Lv4, 'day').format("YYYY-MM-DD HH:mm");
 
   aboutToAppear() {
     this.EventTable.getRdbStore(() => {
@@ -102,7 +102,7 @@ export struct DeadlinePage {
 
 
           ListItem() {
-            listHeader('非常紧急', `（${UrgencyValue.Lv1}天内）`)
+            listHeader(UrgencyText.Lv1, `（${UrgencyDays.Lv1}天内）`)
           }
 
           ListItemGroup() {
@@ -119,7 +119,7 @@ export struct DeadlinePage {
 
 
           ListItem() {
-            listHeader('紧急', `（${UrgencyValue.Lv2}天内）`)
+            listHeader(UrgencyText.Lv2, `（${UrgencyDays.Lv2}天内）`)
           }
 
           ListItemGroup() {
@@ -136,7 +136,7 @@ export struct DeadlinePage {
 
 
           ListItem() {
-            listHeader('还有时间', `（${UrgencyValue.Lv3}天内）`)
+            listHeader(UrgencyText.Lv3, `（${UrgencyDays.Lv3}天内）`)
           }
 
           ListItemGroup() {
@@ -153,7 +153,7 @@ export struct DeadlinePage {
 
 
           ListItem() {
-            listHeader('该开始了', `（${UrgencyValue.Lv4}天内）`)
+            listHeader(UrgencyText.Lv4, `（${UrgencyDays.Lv4}天内）`)
           }
 
           ListItemGroup() {
@@ -212,8 +212,8 @@ struct EventItem {
       })
 
       Progress({
-        value: UrgencyValue.Lv4 * 24 - dayjs(this.event.deadlineTime).diff(dayjs(), 'hour'),
-        total: UrgencyValue.Lv4 * 24,
+        value: UrgencyDays.Lv4 * 24 - dayjs(this.event.deadlineTime).diff(dayjs(), 'hour'),
+        total: UrgencyDays.Lv4 * 24,
         type: ProgressType.Linear
       })
         .width('90%')

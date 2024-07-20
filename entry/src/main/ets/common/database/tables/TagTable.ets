@@ -7,11 +7,13 @@ export default class TagTable {
   private tagTable = new Rdb(CommonConstants.TAG_TABLE.tableName, CommonConstants.TAG_TABLE.sqlCreate,
     CommonConstants.TAG_TABLE.sqlInit, CommonConstants.TAG_TABLE.columns);
 
-  constructor(callback: Function = () => {}) {
+  constructor(callback: Function = () => {
+  }) {
     this.tagTable.getRdbStore(callback);
   }
 
-  getRdbStore(callback: Function = () => {}) {
+  getRdbStore(callback: Function = () => {
+  }) {
     this.tagTable.getRdbStore(callback);
   }
 
@@ -20,9 +22,9 @@ export default class TagTable {
     this.tagTable.insertData(valueBucket, callback);
   }
 
-  deleteData(tag: TagData, callback: Function) {
+  deleteData(id: number, callback: Function) {
     let predicates = new relationalStore.RdbPredicates(CommonConstants.TAG_TABLE.tableName);
-    predicates.equalTo('id', tag.id);
+    predicates.equalTo('id', id);
     this.tagTable.deleteData(predicates, callback);
   }
 
@@ -33,8 +35,15 @@ export default class TagTable {
     this.tagTable.updateData(predicates, valueBucket, callback);
   }
 
-  queryData(callback: Function) {
+  queryData(callback: Function, options?: {
+    isCustom?: boolean
+  }) {
     let predicates = new relationalStore.RdbPredicates(CommonConstants.TAG_TABLE.tableName);
+    if (options) {
+      if (options.isCustom)
+        predicates.greaterThan('id', 4);
+    }
+
     this.tagTable.queryData(predicates, (resultSet: relationalStore.ResultSet) => {
       let count: number = resultSet.rowCount;
       if (count === 0 || typeof count === 'string') {

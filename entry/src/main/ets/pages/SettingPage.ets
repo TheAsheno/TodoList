@@ -1,18 +1,31 @@
+import { tagCustomDialog } from '../view/tagCustomDialog'
+import { urgencyModifyDialog } from '../view/urgencyModifyDialog'
+
 @Entry
 @Component
 export struct SettingPage {
+  tagAddDialogController: CustomDialogController = new CustomDialogController({
+    builder: tagCustomDialog(),
+    customStyle: true,
+    autoCancel: false
+  })
+  urgencyModifyDialogController: CustomDialogController = new CustomDialogController({
+    builder: urgencyModifyDialog(),
+    customStyle: true,
+    autoCancel: false
+  })
   build() {
     Column(){
       Column() {
         List({ space: 40 }) {
           ListItem() {
             settingItem($r('app.media.ic_modify'), '修改紧急程度', () => {
-
+              this.urgencyModifyDialogController.open();
             })
           }
           ListItem() {
-            settingItem($r('app.media.ic_addtag'), '添加自定义标签', () => {
-
+            settingItem($r('app.media.ic_addTag'), '自定义标签', () => {
+              this.tagAddDialogController.open();
             })
           }
           ListItem() {
@@ -26,7 +39,7 @@ export struct SettingPage {
       .width('100%')
       .padding(30)
       .borderRadius({ topLeft: 30, topRight: 30})
-      .backgroundColor(Color.White)
+      .backgroundColor('#F5F7F8')
     }.pageBgStyle()
   }
 }
@@ -34,14 +47,14 @@ export struct SettingPage {
 @Builder function settingItem(icon: Resource, text: string, callback: () => void) {
   Row({ space: 15 }) {
     Image(icon)
-      .height(25)
-      .width(25)
+      .height($r('app.float.icon_size_M'))
+      .width($r('app.float.icon_size_M'))
     Text(text)
-      .fontSize(16)
+      .fontSize($r('app.float.font_size_M'))
     Blank()
     Image($r('app.media.ic_rightArrow'))
-      .width(25)
-      .height(25)
+      .width($r('app.float.icon_size_M'))
+      .height($r('app.float.icon_size_M'))
   }.width('100%')
   .onClick(callback)
 }
@@ -50,8 +63,7 @@ export struct SettingPage {
   .width('100%')
   .height('100%')
   .alignItems(HorizontalAlign.Center)
-  .backgroundColor(Color.Grey)
-  //.backgroundImage($r("app.media.img_deadline_bg"))
-  //.backgroundImageSize({ width: '100%', height: '100%' })
+  .backgroundImage($r("app.media.img_setting_bg"))
+  .backgroundImageSize({ width: '100%', height: '43%' })
   .justifyContent(FlexAlign.End)
 }

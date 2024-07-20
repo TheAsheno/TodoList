@@ -12,7 +12,7 @@ export struct tagDialog {
 
   aboutToAppear() {
     this.TagTable.getRdbStore(() => {
-      this.TagTable.queryData((result) => {
+      this.TagTable.queryData((result: TagData[]) => {
         this.tags = result;
       })
     })
@@ -22,16 +22,13 @@ export struct tagDialog {
     Column({ space: 10 }) {
       Column({ space: 20 }) {
         Row() {
-          Text('标签').fontSize(20)
+          Text('标签').fontSize($r('app.float.font_size_MP'))
         }.width('100%')
         .justifyContent(FlexAlign.Center)
 
         List() {
           ForEach(this.tags, (tag: TagData) => {
-            tagItem(tag, () => {
-              this.selectTag = tag.znName;
-              this.controller.close();
-            })
+            this.tagItem(tag)
           })
         }.tagListStyle()
 
@@ -47,23 +44,24 @@ export struct tagDialog {
     }
     .width('80%')
   }
-}
 
-@Builder function tagItem(tag: TagData, callback: () => void) {
-  Row() {
-    Text(tag.znName)
-      .fontSize(15)
-    if (tag.enName)
-      Text(' - ' + tag.enName).fontSize(15)
-    Blank()
-    Image($rawfile(`${tag.icon}`))
-      .width(20)
-      .height(20)
-  }.width('100%')
-  .padding(15)
-  .onClick(() => {
-    callback();
-  })
+  @Builder tagItem(tag: TagData) {
+    Row() {
+      Text(tag.znName)
+        .fontSize($r('app.float.font_size_M'))
+      if (tag.enName)
+        Text(' - ' + tag.enName).fontSize($r('app.float.font_size_M'))
+      Blank()
+      Image($rawfile(`${tag.icon}`))
+        .width($r('app.float.icon_size_S'))
+        .height($r('app.float.icon_size_S'))
+    }.width('100%')
+    .padding(15)
+    .onClick(() => {
+      this.selectTag = tag.znName;
+      this.controller.close();
+    })
+  }
 }
 
 @Extend(List) function tagListStyle() {
