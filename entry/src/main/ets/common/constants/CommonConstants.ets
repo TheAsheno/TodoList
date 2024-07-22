@@ -1,5 +1,5 @@
 import relationalStore from '@ohos.data.relationalStore';
-import { EventTable, TagTable } from '../../viewmodel/ConstantsInterface';
+import { EventTable, TagTable, ScheduleTable } from '../../viewmodel/ConstantsInterface';
 
 export default class CommonConstants {
 
@@ -23,8 +23,19 @@ export default class CommonConstants {
     columns: ['id', 'znName', 'enName', 'icon']
   }
 
+  static readonly SCHEDULE_TABLE: TagTable = {
+    tableName: 'scheduleTable',
+    sqlCreate: 'CREATE TABLE IF NOT EXISTS scheduleTable(id INTEGER PRIMARY KEY AUTOINCREMENT, text TEXT, time TEXT, eventId INTEGER)',
+    sqlInit: '',
+    columns: ['id', 'text', 'time', 'eventId']
+  }
+
+  static readonly PREFERENCE_INSTANCE_NAME: string = 'myStore';
+  static readonly PREFERENCE_URGENCY_KEY: string = 'urgencyLvArr';
+
   static readonly RDB_TAG = '[Debug.Rdb]';
   static readonly EVENT_TABLE_TAG = '[Debug.EventTable]';
   static readonly TAG_TABLE_TAG = '[Debug.TagTable]';
+  static readonly SCHEDULE_TABLE_TAG = '[Debug.ScheduleTable]';
   static readonly INDEX_TAG = '[Debug.Index]';
 }

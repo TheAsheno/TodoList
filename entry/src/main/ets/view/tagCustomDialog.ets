@@ -33,6 +33,8 @@ export struct tagCustomDialog {
     this.TagTable.insertData(tmp, (id) => {
       tmp.id = id;
       this.tags.push(tmp);
+      this.tagZnName = '';
+      this.tagEnName = '';
       this.isInsert = false;
     })
   }
@@ -42,6 +44,8 @@ export struct tagCustomDialog {
       if (result.length == 0)
         this.TagTable.deleteData(this.tags[tagIndex].id, () => {
           this.tags.splice(tagIndex, 1);
+          if (this.tags.length == 0)
+            this.isEdit = false;
         });
       else
         promptAction.showToast({
@@ -57,12 +61,21 @@ export struct tagCustomDialog {
       Column({ space: 20 }) {
         Row({ space: 15 }) {
           Text('自定义标签').fontSize($r('app.float.font_size_MP'))
+          if (this.isEdit)
+            Text('edit')
+          if (this.isInsert)
+            Text('insert')
           Blank()
           if (this.isInsert)
-            this.imageItem($r('app.media.ic_leftArrow'), !this.isEdit, () => this.isInsert = false)
-          else
-            this.imageItem($r('app.media.ic_addTag2'), !this.isEdit, () => this.isInsert = true)
-          this.imageItem($r('app.media.ic_mg'), !this.isInsert && this.tags.length != 0, () => this.isEdit = !this.isEdit)
+            this.imageItem($r('app.media.ic_leftArrow'), () => this.isInsert = false)
+          else {
+            if (!this.isEdit)
+              this.imageItem($r('app.media.ic_addTag2'), () => this.isInsert = true)
+            this.imageItem($r('app.media.ic_mg'), () => {
+              if (this.tags.length != 0)
+                this.isEdit = !this.isEdit
+            })
+          }
         }.width('100%')
         .justifyContent(FlexAlign.Start)
         if (this.isInsert) {
@@ -76,14 +89,21 @@ export struct tagCustomDialog {
           })
           Row() {
             Button('取消')
-              .fontColor($r('app.color.closeTagButtonColor'))
+              .fontColor($r("app.color.closeButtonColor"))
               .backgroundColor(Color.Transparent)
               .onClick(() => this.controller.close())
             Button('确认')
-              .fontColor(Color.Red)
+              .fontColor($r('app.color.confirmButtonColor'))
               .backgroundColor(Color.Transparent)
               .onClick(() => {
-                this.insertTag();
+                if (!this.tagZnName)
+                  promptAction.showToast({
+                    message: '请输入标签名称',
+                    duration: 2000,
+                    bottom: 50
+                  });
+                else
+                  this.insertTag();
               })
           }.width('100%')
           .justifyContent(FlexAlign.SpaceAround)
@@ -100,13 +120,13 @@ export struct tagCustomDialog {
             })
           }.tagListStyle()
           Button('关闭')
-            .fontColor($r('app.color.closeTagButtonColor'))
+            .fontColor($r("app.color.closeButtonColor"))
             .backgroundColor(Color.Transparent)
             .onClick(() => this.controller.close())
 
         }
       }
-      .backgroundColor("#EEEEEE")
+      .backgroundColor($r('app.color.dialogBgColor'))
       .width('100%')
       .padding({ left: 20, right: 20, top: 20, bottom: 5 })
       .borderRadius(10)
@@ -114,9 +134,8 @@ export struct tagCustomDialog {
     .width('80%')
   }
 
-  @Builder imageItem(icon: Resource, enable: boolean, callback: () => void) {
+  @Builder imageItem(icon: Resource, callback: () => void) {
     Image(icon)
-      .enabled(enable)
       .width($r('app.float.icon_size_M'))
       .height($r('app.float.icon_size_M'))
       .onClick(callback)
@@ -147,7 +166,7 @@ export struct tagCustomDialog {
 
 @Extend(List) function tagListStyle() {
   .divider({ strokeWidth: 2, color: $r('app.color.dividerColor'), startMargin: 0, endMargin: 0 })
-  .backgroundColor($r('app.color.listBackground'))
+  .backgroundColor($r("app.color.listBgColor"))
   .borderRadius(15)
   .constraintSize({ maxHeight: 300 })
 }

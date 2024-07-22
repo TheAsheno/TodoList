@@ -1,19 +1,22 @@
 import router from '@ohos.router'
 import EventTable from '../common/database/tables/EventTable';
 import EventData from '../viewmodel/EventData';
-import { tagDialog } from '../view/tagDialog'
-import promptAction from '@ohos.promptAction'
+import ScheduleTable from '../common/database/tables/ScheduleTable';
+import ScheduleData from '../viewmodel/ScheduleData';
+import { scheduleDialog } from '../view/scheduleDialog'
 import emitter from '@ohos.events.emitter'
 import dayjs from "dayjs";
-import { EventAction } from '../enums/EventAction'
+import UrgencyDataModel from '../model/UrgencyDataModel';
 
 @Entry
 @Component
 struct EventPage {
   params = router.getParams();
-  event: EventData = this.params['event'];
-  action: EventAction = this.params['action'];
-
+  @State event: EventData = this.params['event'];
+  @State isScheduleOpen: boolean = false;
+  @Provide newSchedule: ScheduleData = new ScheduleData({ id: 0, text: '', time: '', eventId: this.event.id });
+  @State scheduleList: Array<ScheduleData> = [];
+  private ScheduleTable: ScheduleTable = new ScheduleTable();
   private EventTable: EventTable = new EventTable();
   @Provide selectTag: string = '';
   @State selectTime: string = '';
@@ -21,257 +24,319 @@ struct EventPage {
   selectDeadline: Date = new Date();
   noteText: string = '';
   titleText: string = '';
-  tagDialogController: CustomDialogController = new CustomDialogController({
-    builder: tagDialog(),
+  scroller: Scroller = new Scroller()
+  scheduleDialogController: CustomDialogController = new CustomDialogController({
+    builder: scheduleDialog({ eventId: this.event.id }),
     customStyle: true,
     autoCancel: false
   })
 
-  checkEvent(callback: (err: string, newEvent: EventData) => void) {
-    if (!this.titleText) {
-      callback('标题不能为空', null);
-      return;
+  deleteEvent() {
+    if (this.scheduleList.length > 0) {
+      for (let i = 0; i < this.scheduleList.length; i++)
+        this.ScheduleTable.deleteData(this.scheduleList[i].id, () => {});
     }
-    if (!this.selectTag) {
-      callback('请选择标签', null);
-      return;
-    }
-    if (!this.selectDate) {
-      callback('请输入截止时间', null);
-      return;
-    }
-    let tmp: EventData = {
-      id: 0,
-      name: this.titleText,
-      note: this.noteText,
-      createTime: '',
-      deadlineTime: this.selectDate + ' ' + this.selectTime,
-      updateTime: '',
-      tag: this.selectTag,
-      isDone: false
-    };
-    if (this.action == EventAction.Update) {
-      tmp.id = this.event.id;
-      tmp.createTime = this.event.createTime;
-      tmp.isDone = this.event.isDone;
-    }
-    callback(null, tmp);
-  }
-
-  insertEvent(newEvent: EventData) {
-    this.EventTable.insertData(newEvent, (id: number) => {
-      newEvent.id = id;
+    this.EventTable.deleteData(this.event.id, () => {
       emitter.emit({ eventId: 1 })
       router.back();
     });
   }
 
-  updateEvent(newEvent: EventData) {
-    this.EventTable.updateData(newEvent, () => {
-      emitter.emit({ eventId: 1 })
-      router.back();
-    });
+  insertSchedule() {
+    this.scheduleList.push(this.newSchedule);
+    this.isScheduleOpen = true;
+    this.scroller.scrollEdge(Edge.Bottom)
+  }
+
+  getResidualDays(time: string) {
+    let diff = dayjs(time).diff(dayjs(), 'day');
+    if (diff < 0)
+      return '已过期';
+    else
+      return  '还有' + (diff + 1) + '天';
   }
 
   aboutToAppear() {
-    if (this.action == EventAction.Update) {
-      this.titleText = this.event.name;
-      this.noteText = this.event.note;
-      this.selectTag = this.event.tag;
-      this.selectDeadline = new Date(this.event.deadlineTime);
-      this.selectDate = dayjs(this.selectDeadline).format("YYYY-MM-DD");
-      this.selectTime = dayjs(this.selectDeadline).format("HH:mm");
-    }
-    else if (this.action == EventAction.Insert)
-      this.selectDeadline.setHours(0, 0);
-    this.EventTable.getRdbStore(() => {
-    });
+    this.titleText = this.event.name;
+    this.noteText = this.event.note;
+    this.selectTag = this.event.tag;
+    this.selectDeadline = new Date(this.event.deadlineTime);
+    this.selectDate = dayjs(this.selectDeadline).format("YYYY-MM-DD");
+    this.selectTime = dayjs(this.selectDeadline).format("HH:mm");
+    this.EventTable.getRdbStore(() => {});
+    this.ScheduleTable.getRdbStore(() => {
+      this.ScheduleTable.queryData((result) => {
+        this.scheduleList = result;
+        if (this.scheduleList.length != 0) {
+          this.isScheduleOpen = true;
+          this.scroller.scrollEdge(Edge.Bottom)
+        }
+      }, { eventId: this.event.id })
+    })
+    emitter.on({ eventId: 4 }, () => {
+      this.insertSchedule();
+    })
   }
 
   build() {
     Column() {
-      Column({ space: 15 }) {
+      Column({ space: 10 }) {
         Row({ space: 30 }) {
-          if (this.action == EventAction.Update)
-            Image($r('app.media.ic_delete'))
+          Image($r('app.media.ic_leftArrow'))
+            .width($r('app.float.icon_size_L'))
+            .height($r('app.float.icon_size_L'))
+            .onClick(() => router.back())
+          if (!this.event.isDone)
+            Image($r('app.media.ic_addTag2'))
               .width($r('app.float.icon_size_L'))
               .height($r('app.float.icon_size_L'))
+              .onClick(() => this.scheduleDialogController.open())
+        }.width('100%')
+        .justifyContent(FlexAlign.End)
+
+        Text(this.event.name)
+          .titleStyle()
+          .margin({ left: 10, right: 10, bottom: 10 })
+
+        Column({ space: 10 }) {
+          Divider()
+            .strokeWidth(2)
+            .lineCap(LineCapStyle.Square)
+            .margin({ left: 10, right: 10 })
+
+
+          Row({ space: 10 }) {
+            Image($rawfile('ic_tag_rt.svg'))
+              .width($r('app.float.icon_size_S'))
+              .height($r('app.float.icon_size_S'))
+            Text(this.event.tag)
+              .fontSize($r('app.float.font_size_M'))
+            Blank()
+            if (!this.event.isDone) {
+              Text(this.getResidualDays(this.event.deadlineTime))
+              Circle()
+                .circleStyle(UrgencyDataModel.getCircleColor(this.event.deadlineTime))
+            }
+          }.width('80%')
+
+          Divider()
+            .strokeWidth(2)
+            .lineCap(LineCapStyle.Square)
+            .margin({ left: 10, right: 10 })
+        }
+
+        Stack({ alignContent: Alignment.Bottom }) {
+          Column({ space: 15 }) {
+            List({ space: 15 }) {
+              ListItem() {
+                infoItem({ text: '截止时间', time: this.event.deadlineTime })
+              }
+              ListItem() {
+                infoItem({ text: '完成时间', time: this.event.isDone ? this.event.updateTime : '' })
+              }
+              ListItem() {
+                infoItem({ text: '创建时间', time: this.event.createTime })
+              }
+            }.listBgStyle()
+
+            if (this.event.note) {
+              Row({ space: 10 }) {
+                Image($r('app.media.ic_note'))
+                  .height($r('app.float.icon_size_M'))
+                  .width($r('app.float.icon_size_M'))
+                  .fillColor($r('app.color.noteFontColor'))
+                Text(this.event.note)
+                  .fontColor($r('app.color.noteFontColor'))
+                  .fontSize($r('app.float.font_size_M'))
+                  .layoutWeight(1)
+              }.width('90%')
+              .padding(20)
+              .borderRadius(10)
+              .alignItems(VerticalAlign.Top)
+              .backgroundColor($r('app.color.noteBgColor'))
+            }
+
+            Divider()
+              .strokeWidth(2)
+              .lineCap(LineCapStyle.Square)
+              .margin({ left: 10, right: 10 })
+
+            Column() {
+              Row({ space: 10 }) {
+                Image($r('app.media.ic_rightArrow'))
+                  .height($r('app.float.icon_size_M'))
+                  .width($r('app.float.icon_size_M'))
+                  .rotate({ angle: this.isScheduleOpen ? 90 : 0 })
+                  .animation({ duration: 200 })
+                Text('任务进度')
+                  .fontSize($r('app.float.font_size_M'))
+              }.margin(10)
+              .width('90%')
+              .enabled(this.scheduleList.length != 0)
+              .onClick(() => {
+                this.isScheduleOpen = !this.isScheduleOpen;
+              })
+              .justifyContent(FlexAlign.Start)
+
+              if (this.isScheduleOpen) {
+                Scroll(this.scroller) {
+                  List() {
+                    ForEach(this.scheduleList, (item, index) => {
+                      this.scheduleItem(item, index)
+                    })
+                  }.width('90%')
+                  .height('100%')
+                  .padding(5)
+                }
+                .height(200)
+                .scrollable(ScrollDirection.Vertical)
+                .scrollBarColor(Color.Grey)
+                .scrollBar(BarState.On)
+                .scrollBarWidth(5)
+              }
+            }
+          }.height('100%')
+
+          Column({ space: 5 }) {
+            Button(this.event.isDone ? '未完成任务' : '完成任务')
+              .width(280)
+              .height(45)
+              .fontSize($r('app.float.font_size_MP'))
+              .fontColor($r("app.color.completeButtonFontColor"))
+              .backgroundColor($r("app.color.completeButtonBgColor"))
+              .onClick(() => {
+                this.event.isDone = !this.event.isDone;
+                this.EventTable.updateData(this.event, () => {
+                  emitter.emit({ eventId: 1 })
+                })
+              })
+            Button('删除任务')
+              .scale({ x: 0.8, y: 0.8 })
+              .width(220)
+              .height(45)
+              .fontSize($r('app.float.font_size_MP'))
+              .fontColor($r('app.color.deleteButtonFontColor'))
+              .backgroundColor($r('app.color.deleteButtonBgColor'))
               .onClick(() => {
                 AlertDialog.show(
                   {
-                    title: '删除该事项？',
+                    title: '删除该任务？',
                     message: '删除后无法恢复，您确认要删除吗？',
                     autoCancel: true,
                     alignment: DialogAlignment.Bottom,
                     offset: { dx: 0, dy: -20 },
                     primaryButton: {
                       value: '确认',
-                      fontColor: Color.Red,
+                      fontColor: $r('app.color.confirmButtonColor'),
                       action: () => {
-                        this.EventTable.deleteData(this.event.id, () => {
-                          emitter.emit({ eventId: 1 })
-                          router.back();
-                        });
+                        this.deleteEvent();
                       }
                     },
                     secondaryButton: {
                       value: '取消',
-                      action: () => {}
+                      action: () => {
+                      }
                     }
                   }
                 )
               })
-          Image($r('app.media.ic_leftArrow'))
-            .width($r('app.float.icon_size_L'))
-            .height($r('app.float.icon_size_L'))
-            .onClick(() => router.back())
-          Image($r("app.media.ic_yes"))
-            .width($r('app.float.icon_size_L'))
-            .height($r('app.float.icon_size_L'))
-            .onClick(() => {
-              this.checkEvent((err, newEvent) => {
-                if (err) {
-                  promptAction.showToast({
-                    message: err,
-                    duration: 2000,
-                    bottom: 50
-                  });
-                }
-                else {
-                  if (this.action == EventAction.Insert)
-                    this.insertEvent(newEvent);
-                  else if (this.action == EventAction.Update)
-                    this.updateEvent(newEvent);
-                }
-              })
-            })
-        }.width('100%')
-        .justifyContent(FlexAlign.End)
-
-        Row() {
-          Text(this.action == EventAction.Insert ? '新建事项' : '查看事项').titleStyle()
-          Blank()
-        }.width('100%')
-        .margin(10)
-
-        Divider()
-          .strokeWidth(2)
-          .lineCap(LineCapStyle.Square)
-          .margin({ left: 10, right: 10, bottom: 10 })
-
-        List({ space: 30 }) {
-          ListItem() {
-            inputItem({ icon: $r('app.media.ic_title') }) {
-              TextInput({ placeholder: '标题', text: this.titleText })
-                .height(40)
-                .layoutWeight(1)
-                .caretColor(Color.Black)
-                .onChange((value) => {
-                  this.titleText = value;
-                })
-            }
-          }
-
-          ListItem() {
-            inputItem({ icon: $r('app.media.ic_tags') }) {
-              Button(this.selectTag ? this.selectTag : '选择标签')
-                .btStyle(() => {
-                  this.tagDialogController.open()
-                })
-            }
-          }
-
-          ListItem() {
-            inputItem({ icon: $r('app.media.ic_time') }) {
-              Row({ space: 10 }) {
-                Button(this.selectDate ? this.selectDate : "截止时间")
-                  .btStyle(() => {
-                    DatePickerDialog.show({
-                      start: new Date(),
-                      end: new Date("2100-12-31"),
-                      selected: this.selectDeadline,
-                      onAccept: (value: DatePickerResult) => {
-                        this.selectDeadline.setFullYear(value.year, value.month, value.day)
-                        this.selectDate = dayjs(this.selectDeadline).format("YYYY-MM-DD");
-                      }
-                    })
-                  })
-                if (this.selectDate)
-                  Button((this.selectTime ? this.selectTime : "0:0"))
-                    .btStyle(() => {
-                      TimePickerDialog.show({
-                        selected: this.selectDeadline,
-                        useMilitaryTime: true,
-                        onAccept: (value: TimePickerResult) => {
-                          this.selectDeadline.setHours(value.hour, value.minute);
-                          this.selectTime = dayjs(this.selectDeadline).format("HH:mm");
-                        }
-                      })
-                    })
-              }
-            }
-          }
-
-          ListItem() {
-            inputItem({ icon: $r('app.media.ic_note') }) {
-              TextArea({ placeholder: '笔记', text: this.noteText })
-                .width(280)
-                .height(300)
-                .padding(20)
-                .fontSize($r('app.float.font_size_MP'))
-                .backgroundColor(Color.Transparent)
-                .borderColor(Color.Black)
-                .borderWidth(1)
-                .caretColor(Color.Black)
-                .onChange((value) => {
-                  this.noteText = value;
-                })
-            }
-          }
-        }.width('90%')
+          }.offset({ y: 20 })
+        }.layoutWeight(1)
       }.width('90%')
       .justifyContent(FlexAlign.Start)
       .height('90%')
     }.pageBgStyle()
   }
+
+  @Builder scheduleItem(item: ScheduleData, index: number) {
+    Row({ space: 15 }) {
+      Stack({ alignContent: Alignment.Top }) {
+        if (this.scheduleList.length - 1 != index) {
+          Line()
+            .strokeWidth(2)
+            .startPoint([0, 10])
+            .endPoint([0, 50])
+            .stroke($r('app.color.CircleStrokeColor'))
+            .strokeLineCap(LineCapStyle.Square)
+          Circle()
+            .offset({ x: -1 })
+            .height(10)
+            .width(10)
+            .fill($r('app.color.CircleFillColor'))
+            .stroke($r('app.color.CircleStrokeColor'))
+        }
+        else {
+          Circle()
+            .offset({ x: -1 })
+            .height(15)
+            .width(15)
+            .fill($r('app.color.CircleStrokeColor'))
+            .stroke($r('app.color.CircleStrokeColor'))
+        }
+      }.width(40)
+      .height('100%')
+
+      Column() {
+        Text(dayjs(item.time).format("MM-DD")).fontSize($r('app.float.font_size_M'))
+        Text(dayjs(item.time).format("HH:mm")).fontSize($r('app.float.font_size_S'))
+      }
+
+      Text(item.text)
+        .width(170)
+        .fontSize($r('app.float.font_size_S'))
+    }.width('90%')
+    .height(50)
+    .alignItems(VerticalAlign.Top)
+  }
 }
 
 @Component
-struct inputItem {
-  icon: Resource;
-  @BuilderParam content: () => void;
-
+struct infoItem {
+  @Prop text: string;
+  @Prop time: string;
   build() {
-    Row({ space: 15 }) {
-      Image(this.icon)
+    Row({ space: 10 }) {
+      Image($r('app.media.ic_rightArrow'))
         .height($r('app.float.icon_size_M'))
         .width($r('app.float.icon_size_M'))
-      this.content()
-    }
-
-    .alignItems(VerticalAlign.Top)
+      Text(this.text)
+        .fontSize($r('app.float.font_size_M')).fontSize($r('app.float.font_size_M'))
+      Blank()
+      if (this.time)
+      Column() {
+        Text(dayjs(this.time).format("YYYY-MM-DD")).fontSize($r('app.float.font_size_M'))
+        Text(dayjs(this.time).format("HH:mm")).fontSize($r('app.float.font_size_S'))
+      }.alignItems(HorizontalAlign.End)
+    }.width('100%')
+    .height(40)
   }
+}
+
+@Extend(List) function listBgStyle() {
+  .padding(10)
+  .margin({ left: 10, right: 10 })
+  //.divider({ strokeWidth: 2, color: $r('app.color.dividerReverseColor'), startMargin: 0, endMargin: 0 })
+  //.backgroundColor($r("app.color.listBgColor"))
+  .borderRadius(15)
 }
 
 @Extend(Column) function pageBgStyle() {
   .width('100%')
   .height('100%')
   .alignItems(HorizontalAlign.Center)
-  .backgroundImage($r("app.media.img_add_bg"))
+  .backgroundImage($r("app.media.img_event_bg"))
   .backgroundImageSize({ width: '100%', height: '100%' })
   .justifyContent(FlexAlign.SpaceEvenly)
 }
 
 @Extend(Text) function titleStyle() {
-  .alignSelf(ItemAlign.Start)
   .fontWeight(FontWeight.Bold)
-  .fontSize($r('app.float.font_size_XXL'))
+  .fontSize($r('app.float.font_size_XL'))
   .margin({ left: 20 })
 }
 
-@Extend(Button) function btStyle(callback: () => void) {
-  .fontSize($r('app.float.font_size_M'))
-  .fontColor(Color.Grey)
-  .backgroundColor('#DFDFDE')
-  .onClick(callback)
+@Extend(Circle) function circleStyle(color: ResourceColor) {
+  .height(10)
+  .width(10)
+  .fill(color)
 }

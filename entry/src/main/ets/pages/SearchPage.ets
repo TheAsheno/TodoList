@@ -1,7 +1,6 @@
 import router from '@ohos.router'
 import EventTable from '../common/database/tables/EventTable';
 import EventData from '../viewmodel/EventData';
-import { EventAction } from '../enums/EventAction'
 
 @Entry
 @Component
@@ -40,12 +39,12 @@ struct SearchPage {
             })
         }.margin(10)
       }.width('100%')
-      .backgroundColor(Color.White)
+      .backgroundColor($r('app.color.searchFillBgColor'))
       if (this.searchText) {
         Row() {
           Text('搜索到 ' + this.searchList.length + ' 条结果')
             .fontSize($r('app.float.font_size_M'))
-            .fontColor(Color.Grey)
+            .fontColor($r('app.color.promptTextColor'))
         }.width('90%')
         .justifyContent(FlexAlign.Start)
       }
@@ -56,7 +55,7 @@ struct SearchPage {
             .height($r('app.float.icon_size_XXL'))
           Text('没有匹配的结果')
             .fontSize($r('app.float.font_size_MP'))
-            .fontColor(Color.Grey)
+            .fontColor($r('app.color.promptTextColor'))
         }.height('100%')
         .offset({ x: 0, y: -100 })
         .justifyContent(FlexAlign.Center)
@@ -71,18 +70,14 @@ struct SearchPage {
         }.width('90%')
         .divider({
           strokeWidth: 1,
-          color: this.searchText ? $r('app.color.dividerColor') : Color.Grey,
+          color: this.searchText ? $r('app.color.dividerColor') : $r('app.color.dividerReverseColor'),
           startMargin: 0,
           endMargin: 0
-        })
-        .onClick(() => {
-          if (!this.searchText)
-            router.back();
         })
       }
     }.height('100%')
     .width('100%')
-    .backgroundColor(this.searchText ? Color.White : '#C7C8CC')
+    .backgroundColor(this.searchText ? $r('app.color.searchFillBgColor') : $r('app.color.searchNoneBgColor'))
   }
 
   @Builder searchItem(item: EventData) {
@@ -94,14 +89,16 @@ struct SearchPage {
         Text(item.tag)
           .padding(2)
           .fontSize($r('app.float.font_size_S'))
-          .backgroundColor('#DDDDDD')
+          .backgroundColor($r('app.color.tagBgColor'))
       }.height(30)
       .width('100%')
       .justifyContent(FlexAlign.Start)
       .onClick(() => {
-        router.pushUrl({ url: 'pages/EventPage', params: { event: item, action: EventAction.Update } })
+        if (!this.searchText)
+          router.back();
+        else
+          router.pushUrl({ url: 'pages/EventPage', params: { event: item } })
       })
-
       Text(item.note).noteStyle()
     }.padding(10)
   }

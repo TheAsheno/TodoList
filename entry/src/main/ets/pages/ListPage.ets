@@ -1,16 +1,17 @@
 import router from '@ohos.router'
-import { getCircleColor } from '../common/utils/ColorUtil'
 import EventTable from '../common/database/tables/EventTable';
 import EventData from '../viewmodel/EventData';
+import ScheduleTable from '../common/database/tables/ScheduleTable';
 import { tagDialog } from '../view/tagDialog'
 import emitter from '@ohos.events.emitter'
 import dayjs from "dayjs";
-import { EventAction } from '../enums/EventAction'
+import UrgencyDataModel from '../model/UrgencyDataModel';
 
 @Entry
 @Component
 export struct ListPage {
   private EventTable: EventTable = new EventTable();
+  private ScheduleTable: ScheduleTable = new ScheduleTable();
   @Provide @Watch('onSelectTagChange') selectTag: string = '';
   @State events: Array<EventData> = [];
   @State pageIndex: number = 0;
@@ -40,6 +41,7 @@ export struct ListPage {
     this.EventTable.getRdbStore(() => {
       this.initOrRefresh()
     });
+    this.ScheduleTable.getRdbStore(() => {});
     emitter.on({ eventId: 1 }, () => {
       this.initOrRefresh();
     })
@@ -80,8 +82,13 @@ export struct ListPage {
 
   deleteEvent() {
     if (this.deleteList.length > 0) {
-      for (let i = 0; i < this.deleteList.length; i++)
+      for (let i = 0; i < this.deleteList.length; i++) {
+        this.ScheduleTable.queryData((result) => {
+          for (let i = 0; i < result.length; i++)
+            this.ScheduleTable.deleteData(result[i].id, () => {});
+        }, { eventId: this.deleteList[i] })
         this.EventTable.deleteData(this.deleteList[i], () => {});
+      }
       this.todoListData = this.todoListData.filter(event => !this.deleteList.includes(event.id));
       this.doneListData = this.doneListData.filter(event => !this.deleteList.includes(event.id))
       this.deleteList = [];
@@ -99,6 +106,7 @@ export struct ListPage {
               Image($r('app.media.ic_delete'))
                 .height($r('app.float.icon_size_M'))
                 .width($r('app.float.icon_size_M'))
+                .enabled(this.deleteList.length != 0)
                 .onClick(() => {
                   AlertDialog.show(
                     {
@@ -109,13 +117,14 @@ export struct ListPage {
                       offset: { dx: 0, dy: -20 },
                       primaryButton: {
                         value: '确认',
-                        fontColor: Color.Red,
+                        fontColor: $r('app.color.confirmButtonColor'),
                         action: () => {
                           this.deleteEvent();
                         }
                       },
                       secondaryButton: {
                         value: '取消',
+                        fontColor: $r('app.color.closeButtonColor'),
                         action: () => {}
                       }
                     }
@@ -207,7 +216,7 @@ export struct ListPage {
             .fillColor($r('app.color.addEventButtonColor'))
             .opacity(0.8)
             .onClick(() => {
-                router.pushUrl({ url: 'pages/EventPage', params: { action: EventAction.Insert } })
+                router.pushUrl({ url: 'pages/AddEventPage' })
             })
       }
     }.pageBgStyle()
@@ -219,7 +228,7 @@ export struct ListPage {
         .width($r('app.float.icon_size_S'))
       Text(this.selectTag)
         .fontSize($r('app.float.font_size_S'))
-        .fontColor(Color.Grey)
+        .fontColor($r('app.color.chooseButtonFontColor'))
       Image($r("app.media.ic_close"))
         .height($r('app.float.icon_size_S'))
         .width($r('app.float.icon_size_S'))
@@ -228,7 +237,7 @@ export struct ListPage {
         })
     }.padding(5)
     .borderRadius(15)
-    .backgroundColor('#EBECF1')
+    .backgroundColor($r('app.color.chooseButtonBgColor'))
   }
 }
 
@@ -243,7 +252,7 @@ export struct ListPage {
       if (promptText)
         Text(promptText)
           .fontSize($r('app.float.font_size_S'))
-          .fontColor(Color.Grey)
+          .fontColor($r('app.color.promptTextColor'))
       Blank()
     }.width('100%')
   }
@@ -292,16 +301,16 @@ struct EventItem {
         Text(this.event.tag)
           .padding(2)
           .fontSize($r('app.float.font_size_S'))
-          .backgroundColor('#DDDDDD')
+          .backgroundColor($r('app.color.tagBgColor'))
         if (!this.event.isDone) {
           Circle()
-            .circleStyle(getCircleColor(this.event.deadlineTime))
+            .circleStyle(UrgencyDataModel.getCircleColor(this.event.deadlineTime))
         }
       }.height(30)
       .width('100%')
       .justifyContent(FlexAlign.Start)
       .onClick(() => {
-        router.pushUrl({ url: 'pages/EventPage', params: { event: this.event, action: EventAction.Update } })
+        router.pushUrl({ url: 'pages/EventPage', params: { event: this.event } })
       })
     }.padding(10)
   }
@@ -330,7 +339,7 @@ struct EventItem {
 
 @Extend(ListItemGroup) function listBgStyle() {
   .divider({ strokeWidth: 2, color: $r('app.color.dividerColor'), startMargin: 0, endMargin: 0 })
-  .backgroundColor($r('app.color.listBackground'))
+  .backgroundColor($r("app.color.listBgColor"))
   .borderRadius(15)
 }
 

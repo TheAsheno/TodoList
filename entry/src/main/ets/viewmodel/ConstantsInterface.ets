@@ -11,3 +11,10 @@ export interface TagTable {
   sqlInit: string;
   columns: string[];
 }
+
+export interface ScheduleTable {
+  tableName: string;
+  sqlCreate: string;
+  sqlInit: string;
+  columns: string[];
+}

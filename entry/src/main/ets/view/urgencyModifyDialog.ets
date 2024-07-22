@@ -1,10 +1,44 @@
-import { UrgencyDays, UrgencyText } from '../enums/UrgencyValue'
+import UrgencyDataModel from '../model/UrgencyDataModel';
+import { urgencyInfoBean } from '../viewmodel/UrgencyData';
+import emitter from '@ohos.events.emitter'
+import promptAction from '@ohos.promptAction'
 
 @CustomDialog
 export struct urgencyModifyDialog {
+  @State urgencyList: Array<urgencyInfoBean> = [];
+  colorList: Resource[] = [$r('app.color.deadlineLv1Color'), $r('app.color.deadlineLv2Color'), $r('app.color.deadlineLv3Color'), $r('app.color.deadlineLv4Color')]
   controller: CustomDialogController = new CustomDialogController({
     builder: urgencyModifyDialog
   })
+
+  aboutToAppear() {
+    UrgencyDataModel.getUrgencyList();
+    this.urgencyList = UrgencyDataModel.urgencyList;
+  }
+
+  checkUrgency() {
+    let tmp = 0;
+    for (let i = 0; i < 4; i++) {
+      if (!this.urgencyList[i].days || !this.urgencyList[i].depict) {
+        promptAction.showToast({
+          message: '输入不能为空',
+          duration: 2000,
+          bottom: 50
+        });
+        return false;
+      }
+      if (Number(this.urgencyList[i].days) <= tmp) {
+        promptAction.showToast({
+          message: '天数需要严格递增',
+          duration: 2000,
+          bottom: 50
+        });
+        return false;
+      }
+      tmp = Number(this.urgencyList[i].days);
+    }
+    return true;
+  }
 
   build() {
     Column({ space: 10 }) {
@@ -14,30 +48,28 @@ export struct urgencyModifyDialog {
         }.width('100%')
         .justifyContent(FlexAlign.Center)
 
-        Row() {
-          urgencyItem(1, $r('app.color.deadlineLv1Color'), UrgencyDays.Lv1, UrgencyText.Lv1)
+        List({ space: 10 }) {
+          ForEach(this.urgencyList, (item: urgencyInfoBean, index) => {
+            ListItem() {
+              this.urgencyItem(index, item, this.colorList[index])
+            }
+          })
         }
 
-        Row() {
-          urgencyItem(2, $r('app.color.deadlineLv2Color'), UrgencyDays.Lv2, UrgencyText.Lv2)
-        }
-
-        Row() {
-          urgencyItem(3, $r('app.color.deadlineLv3Color'), UrgencyDays.Lv3, UrgencyText.Lv3)
-        }
-        Row() {
-          urgencyItem(4, $r('app.color.deadlineLv4Color'), UrgencyDays.Lv4, UrgencyText.Lv4)
-        }
         Row() {
           Button('取消')
-            .fontColor($r('app.color.closeTagButtonColor'))
+            .fontColor($r("app.color.closeButtonColor"))
             .backgroundColor(Color.Transparent)
             .onClick(() => this.controller.close())
           Button('确认')
             .fontColor(Color.Red)
             .backgroundColor(Color.Transparent)
-            .onClick(() => {
-              this.controller.close()
+            .onClick(async () => {
+              if (this.checkUrgency()) {
+                await UrgencyDataModel.updateUrgency(this.urgencyList);
+                emitter.emit({ eventId: 3 })
+                this.controller.close()
+              }
             })
         }.width('100%')
         .justifyContent(FlexAlign.SpaceAround)
@@ -49,27 +81,25 @@ export struct urgencyModifyDialog {
     }
     .width('80%')
   }
-}
 
-@Builder function urgencyItem(index: number, color: Resource, urgencyDays: number, urgencyText: string) {
-  Row({ space: 10 }) {
-    Circle()
-      .circleStyle(color)
-    Text(`Lv${index}`)
-    TextInput({ placeholder: '天', text: urgencyDays.toString() })
-      .width(50)
-      .type(InputType.Number)
-    TextInput({ placeholder: '描述', text: urgencyText})
-      .width(160)
-  }.width('100%')
-}
-
-
-@Extend(List) function tagListStyle() {
-  .divider({ strokeWidth: 2, color: $r('app.color.dividerColor'), startMargin: 0, endMargin: 0 })
-  .backgroundColor($r('app.color.listBackground'))
-  .borderRadius(15)
-  .constraintSize({ maxHeight: 300 })
+  @Builder urgencyItem(index: number, urgency: urgencyInfoBean, color: Resource) {
+    Row({ space: 10 }) {
+      Circle()
+        .circleStyle(color)
+      Text(urgency.urgencyLv)
+      TextInput({ placeholder: '天', text: urgency.days })
+        .width(52)
+        .type(InputType.Number)
+        .onChange((value) => {
+          this.urgencyList[index].days = value;
+        })
+      TextInput({ placeholder: '描述', text: urgency.depict })
+        .width(160)
+        .onChange((value) => {
+          this.urgencyList[index].depict = value;
+        })
+    }.width('100%')
+  }
 }
 
 @Extend(Circle) function circleStyle(color: ResourceColor) {

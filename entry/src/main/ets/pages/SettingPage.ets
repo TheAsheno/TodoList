@@ -39,7 +39,7 @@ export struct SettingPage {
       .width('100%')
       .padding(30)
       .borderRadius({ topLeft: 30, topRight: 30})
-      .backgroundColor('#F5F7F8')
+      .backgroundColor($r('app.color.listBgColor'))
     }.pageBgStyle()
   }
 }

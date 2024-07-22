@@ -44,7 +44,8 @@ export default class EventTable {
     limit?: number,
     updateTimeGreaterThanOrEqualTo?: string,
     deadlineTimeExpire?: boolean,
-    deadlineTimeBetween?: { begin: string, end: string }
+    deadlineTimeBetween?: { begin: string, end: string },
+    greaterThanDeadlineTime?: string
   }) {
     let predicates = new relationalStore.RdbPredicates(CommonConstants.EVENT_TABLE.tableName);
     if (options) {
@@ -70,6 +71,8 @@ export default class EventTable {
       if (options.deadlineTimeBetween) {
         predicates.between('deadlineTIme', options.deadlineTimeBetween.begin, options.deadlineTimeBetween.end);
       }
+      if (options.greaterThanDeadlineTime)
+        predicates.greaterThan('deadlineTime', options.greaterThanDeadlineTime);
     }
     this.eventTable.queryData(predicates, (resultSet: relationalStore.ResultSet) => {
       let count: number = resultSet.rowCount;

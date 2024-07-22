@@ -9,20 +9,92 @@
       "value": "#959595"
     },
     {
+      "name": "caretColor",
+      "value": "#0C0C0C"
+    },
+    {
       "name": "dividerColor",
       "value": "#EEEDEB"
+    },
+    {
+      "name": "dividerReverseColor",
+      "value": "#A9A9A9"
+    },
+    {
+      "name": "scrollBarColor",
+      "value": "#959595"
+    },
+    {
+      "name": "CircleStrokeColor",
+      "value": "#000000"
+    },
+    {
+      "name": "CircleFillColor",
+      "value": "#FFFFFF"
     },
     {
       "name": "addEventButtonColor",
       "value": "#3572EF"
     },
     {
-      "name": "closeTagButtonColor",
+      "name": "closeButtonColor",
       "value": "#0F67B1"
     },
     {
-      "name": "listBackground",
+      "name": "confirmButtonColor",
+      "value": "#FF0000"
+    },
+    {
+      "name": "chooseButtonFontColor",
+      "value": "#A9A9A9"
+    },
+    {
+      "name": "chooseButtonBgColor",
+      "value": "#DFDFDE"
+    },
+    {
+      "name": "completeButtonFontColor",
+      "value": "#FFFFFF"
+    },
+    {
+      "name": "completeButtonBgColor",
+      "value": "#4793AF"
+    },
+    {
+      "name": "deleteButtonFontColor",
+      "value": "#FFFFFF"
+    },
+    {
+      "name": "deleteButtonBgColor",
+      "value": "#FF0000"
+    },
+    {
+      "name": "noteFontColor",
+      "value": "#2B2A4C"
+    },
+    {
+      "name": "noteBgColor",
+      "value": "#C7C8CC"
+    },
+    {
+      "name": "listBgColor",
       "value": "#F5F5F5"
+    },
+    {
+      "name": "dialogBgColor",
+      "value": "#EEEEEE"
+    },
+    {
+      "name": "tagBgColor",
+      "value": "#DDDDDD"
+    },
+    {
+      "name": "promptTextColor",
+      "value": "#B4B4B8"
+    },
+    {
+      "name": "inputBorderColor",
+      "value": "#000000"
     },
     {
       "name": "deadlineLv1Color",
@@ -39,6 +111,22 @@
     {
       "name": "deadlineLv4Color",
       "value": "#97BE5A"
+    },
+    {
+      "name": "deadlineResidualColor",
+      "value": "#97BE5A"
+    },
+    {
+      "name": "deadlineExpireColor",
+      "value": "#B4B4B8"
+    },
+    {
+      "name": "searchNoneBgColor",
+      "value": "#C7C8CC"
+    },
+    {
+      "name": "searchFillBgColor",
+      "value": "#FFFFFF"
     }
   ]
 }

@@ -33,16 +33,15 @@ export struct tagDialog {
         }.tagListStyle()
 
         Button('关闭')
-          .fontColor($r('app.color.closeTagButtonColor'))
+          .fontColor($r("app.color.closeButtonColor"))
           .backgroundColor(Color.Transparent)
           .onClick(() => this.controller.close())
       }
-      .backgroundColor("#EEEEEE")
+      .backgroundColor($r('app.color.dialogBgColor'))
       .width('100%')
       .padding({ left: 20, right: 20, top: 20, bottom: 5 })
       .borderRadius(10)
-    }
-    .width('80%')
+    }.width('80%')
   }
 
   @Builder tagItem(tag: TagData) {
@@ -66,7 +65,7 @@ export struct tagDialog {
 
 @Extend(List) function tagListStyle() {
   .divider({ strokeWidth: 2, color: $r('app.color.dividerColor'), startMargin: 0, endMargin: 0 })
-  .backgroundColor($r('app.color.listBackground'))
+  .backgroundColor($r("app.color.listBgColor"))
   .borderRadius(15)
   .constraintSize({ maxHeight: 300 })
 }
